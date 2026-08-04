@@ -1,7 +1,7 @@
 {
-  "name": "odontologia-guerrero",
+  "name": "ef-odontologia-guerrero",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -15,6 +15,7 @@
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.34",
     "expo-router": "~6.0.23",
+    "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
     "nativewind": "^4.2.5",
     "react": "19.1.0",
