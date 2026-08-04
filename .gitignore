@@ -10,3 +10,5 @@ dist/
 
 expo-env.d.ts
 # @end expo-cli
+# Yo evito subir la URL local utilizada para probar la API en un celular físico.
+.env

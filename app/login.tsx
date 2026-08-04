@@ -1,5 +1,6 @@
-import LoginScreen from "@/screens/LoginScreen";
+// Yo mantengo la ruta separada de la pantalla para respetar la estructura enseñada en clase.
+import { LoginScreen } from "@/presentation/screens/LoginScreen";
 
-export default function LoginPage() {
+export default function LoginRoute() {
   return <LoginScreen />;
 }

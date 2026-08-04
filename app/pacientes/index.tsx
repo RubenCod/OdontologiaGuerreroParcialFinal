@@ -1,5 +1,6 @@
-import PacientesScreen from "@/screens/PacientesScreen";
+// Yo conecto la ruta del listado con su pantalla de presentación.
+import { PacientesScreen } from "@/presentation/screens/PacientesScreen";
 
-export default function PacientesPage() {
+export default function PacientesRoute() {
   return <PacientesScreen />;
 }
