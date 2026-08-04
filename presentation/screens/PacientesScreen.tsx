@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -43,6 +43,12 @@ export function PacientesScreen() {
   );
   const cerrarToast = useCallback(() => setShowDeletedToast(false), []);
 
+  useEffect(() => {
+    if (params.feedback === "deleted") {
+      setShowDeletedToast(true);
+    }
+  }, [params.feedback]);
+
   const cargarPacientes = useCallback(
     async (mostrarCarga = true) => {
       try {
@@ -52,7 +58,7 @@ export function PacientesScreen() {
         setPacientes(data);
       } catch (e) {
         console.log("[APP ERROR] Yo no pude listar los pacientes", e);
-        setError("No se pudieron cargar los registros de SQLite.");
+        setError("No se pudieron cargar los registros.");
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -95,7 +101,7 @@ export function PacientesScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <AppToast
-        message="La atención fue eliminada correctamente de la base de datos local."
+        message="La atención fue eliminada correctamente."
         onClose={cerrarToast}
         title="Registro eliminado"
         type="success"
@@ -105,7 +111,7 @@ export function PacientesScreen() {
       <View className="flex-1 px-5 pt-4">
         <AppHeader
           showBack={false}
-          subtitle={`${pacientes.length} registro(s) almacenados en SQLite`}
+          subtitle={`${pacientes.length} registro(s)`}
           title="Pacientes"
         />
 
@@ -173,7 +179,7 @@ export function PacientesScreen() {
         ) : null}
 
         {loading ? (
-          <LoadingState message="Consultando pacientes en SQLite..." />
+          <LoadingState message="Cargando pacientes..." />
         ) : (
           <FlatList
             contentContainerStyle={{ paddingBottom: 24 }}

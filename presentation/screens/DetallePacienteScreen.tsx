@@ -3,11 +3,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -42,6 +43,8 @@ export function DetallePacienteScreen() {
   const [paciente, setPaciente] = useState<PacienteLocal | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>({
     visible: params.feedback === "created",
@@ -142,39 +145,45 @@ export function DetallePacienteScreen() {
     }
   };
 
-  const confirmarEliminacion = () => {
-    if (!paciente) return;
+  const eliminarPaciente = async () => {
+    if (!paciente || deleting) return;
 
-    Alert.alert(
-      "Eliminar atención",
-      `¿Deseas eliminar definitivamente la atención de ${paciente.pacienteNombre}?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Yo elimino el registro únicamente después de la confirmación del usuario.
-              await pacienteRepository.eliminar(db, paciente.id);
-              router.replace({
-                pathname: "/pacientes",
-                params: { feedback: "deleted" },
-              });
-            } catch (e) {
-              console.log("[APP ERROR] Yo no pude eliminar el paciente", e);
-              setError("No se pudo eliminar el registro.");
-              setToast({
-                visible: true,
-                type: "error",
-                title: "Eliminación incompleta",
-                message: "No se pudo eliminar la atención de SQLite.",
-              });
-            }
-          },
+    try {
+      setMostrarConfirmacion(false);
+      setDeleting(true);
+      setError(null);
+
+      // Yo elimino el registro solamente después de la confirmación del usuario.
+      await pacienteRepository.eliminar(db, paciente.id);
+
+      router.replace({
+        pathname: "/pacientes",
+        params: {
+          feedback: "deleted",
+          refresh: Date.now().toString(),
         },
-      ],
-    );
+      });
+    } catch (e) {
+      console.log("[APP ERROR] Yo no pude eliminar el paciente", e);
+      setError("No se pudo eliminar el registro.");
+      setToast({
+        visible: true,
+        type: "error",
+        title: "No se pudo eliminar",
+        message: "Inténtalo nuevamente.",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const confirmarEliminacion = () => {
+    if (!paciente || deleting) return;
+
+    console.log("[UI] Yo abrí la confirmación para eliminar", paciente.id);
+
+    // Yo muestro una confirmación propia para que funcione igual en Android y web.
+    setMostrarConfirmacion(true);
   };
 
   if (loading) {
@@ -207,6 +216,55 @@ export function DetallePacienteScreen() {
         type={toast.type}
         visible={toast.visible}
       />
+
+      <Modal
+        animationType="fade"
+        onRequestClose={() => !deleting && setMostrarConfirmacion(false)}
+        statusBarTranslucent
+        transparent
+        visible={mostrarConfirmacion}
+      >
+        <View
+          className="flex-1 items-center justify-center px-6"
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.65)" }}
+        >
+          <View className="w-full max-w-md rounded-[28px] bg-white p-6">
+            <View className="mb-4 h-14 w-14 items-center justify-center rounded-full bg-red-50">
+              <Text className="text-2xl">🗑️</Text>
+            </View>
+
+            <Text className="text-xl font-black text-slate-950">
+              Eliminar atención
+            </Text>
+            <Text className="mt-2 text-base leading-6 text-slate-600">
+              ¿Deseas eliminar definitivamente la atención de {paciente.pacienteNombre}?
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-red-600">
+              Esta acción no se puede deshacer.
+            </Text>
+
+            <View className="mt-6 flex-row">
+              <TouchableOpacity
+                className="mr-2 flex-1 items-center justify-center rounded-2xl bg-slate-100 px-4 py-4"
+                disabled={deleting}
+                onPress={() => setMostrarConfirmacion(false)}
+              >
+                <Text className="font-extrabold text-slate-700">Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="ml-2 flex-1 items-center justify-center rounded-2xl bg-red-500 px-4 py-4"
+                disabled={deleting}
+                onPress={() => void eliminarPaciente()}
+              >
+                <Text className="font-extrabold text-white">
+                  {deleting ? "Eliminando..." : "Eliminar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <KeyboardAvoidingView
         className="flex-1"
@@ -252,6 +310,7 @@ export function DetallePacienteScreen() {
             ) : null}
 
             <AppButton
+              disabled={deleting}
               iconName="save-outline"
               loading={saving}
               onPress={guardarCambios}
@@ -259,7 +318,9 @@ export function DetallePacienteScreen() {
             />
             <View className="mt-3">
               <AppButton
+                disabled={saving}
                 iconName="trash-outline"
+                loading={deleting}
                 onPress={confirmarEliminacion}
                 title="Eliminar atención"
                 variant="danger"
