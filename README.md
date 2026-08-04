@@ -1,6 +1,6 @@
 # EF_OdontologiaGuerrero
 
-Aplicación móvil desarrollada con React Native y Expo para la evaluación final. El proyecto mantiene la arquitectura utilizada por el profesor y adapta el caso de gestión de pedidos al contexto de una clínica odontológica.
+Aplicación móvil desarrollada con React Native y Expo para la evaluación final. El proyecto mantiene la arquitectura utilizada empleada en clase y adapta el caso de gestión de pedidos al contexto de una clínica odontológica.
 
 ## Funcionalidades principales
 

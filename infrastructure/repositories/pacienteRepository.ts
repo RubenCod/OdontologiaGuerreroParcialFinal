@@ -139,6 +139,13 @@ export const pacienteRepository = {
   async eliminar(db: SQLiteDatabase, id: number): Promise<void> {
     console.log("[SQL DELETE] Yo elimino una atención", { id });
 
-    await db.runAsync("DELETE FROM pacientes WHERE id = ?;", [id]);
+    const resultado = await db.runAsync("DELETE FROM pacientes WHERE id = ?;", [
+      id,
+    ]);
+
+    // Yo verifico que SQLite haya eliminado realmente el registro.
+    if (resultado.changes === 0) {
+      throw new Error("El paciente ya no existe o no pudo ser eliminado.");
+    }
   },
 };
