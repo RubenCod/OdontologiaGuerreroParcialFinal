@@ -1,7 +1,7 @@
 // Yo administro el estado y las validaciones del formulario de registro de doctores.
 import { useState } from "react";
 
-import { DoctorFormData, DoctorFormErrors } from "@/domain/models/DoctorLocal";
+import { DoctorFormData, DoctorFormErrors } from "@/domain/models/Doctor";
 import { validarDoctor } from "@/presentation/utils/validations";
 
 const formularioInicial: DoctorFormData = {

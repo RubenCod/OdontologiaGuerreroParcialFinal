@@ -6,6 +6,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { pacienteRepository } from "@/infrastructure/repositories/pacienteRepository";
+import { useAuth } from "@/presentation/context/AuthContext";
 import { AppButton } from "@/presentation/components/AppButton";
 import { AppHeader } from "@/presentation/components/AppHeader";
 import { PacienteForm } from "@/presentation/components/PacienteForm";
@@ -16,6 +17,7 @@ import { convertirFormularioADto } from "@/presentation/utils/validations";
 export function NuevoPacienteScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
+  const { user } = useAuth();
   const { form, errors, setErrors, actualizarCampo, validarFormulario } =
     usePacienteForm();
   const [saving, setSaving] = useState(false);
@@ -50,7 +52,18 @@ export function NuevoPacienteScreen() {
         return;
       }
 
-      const id = await pacienteRepository.crear(db, dto);
+      if (!user) {
+        setError("Tu sesión ha finalizado. Ingresa nuevamente.");
+        return;
+      }
+
+      // Yo relaciono la atención local con el UID del doctor autenticado en Firebase.
+      const id = await pacienteRepository.crear(
+        db,
+        dto,
+        user.uid,
+        user.email ?? "",
+      );
 
       router.replace({
         pathname: "/pacientes/[id]",

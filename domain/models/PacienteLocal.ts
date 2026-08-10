@@ -1,4 +1,4 @@
-// Yo defino el modelo principal que representa una atención odontológica guardada en SQLite.
+// Yo defino el modelo de la atención odontológica guardada localmente en SQLite.
 export type EstadoAtencion =
   "PENDIENTE" | "EN_PROCESO" | "FINALIZADO" | "CANCELADO";
 
@@ -24,11 +24,16 @@ export type PacienteLocal = {
   prioridad: PrioridadAtencion;
   descripcion: string;
   estado: EstadoAtencion;
+  doctorUid: string;
+  doctorEmail: string;
   fechaRegistro: string;
 };
 
-// Yo separo los datos editables de los campos generados automáticamente por SQLite.
-export type GuardarPacienteDto = Omit<PacienteLocal, "id" | "fechaRegistro">;
+// Yo separo los datos editables de los campos generados al guardar la atención.
+export type GuardarPacienteDto = Omit<
+  PacienteLocal,
+  "id" | "doctorUid" | "doctorEmail" | "fechaRegistro"
+>;
 
 // Yo uso cadenas en el formulario para controlar correctamente los TextInput.
 export type PacienteFormData = {
