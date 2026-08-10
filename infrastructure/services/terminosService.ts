@@ -17,22 +17,28 @@ export const terminosService = {
 
     const response = await fetch(TERMINOS_API_URL, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+      },
     });
 
     if (!response.ok) {
-      throw new Error(`La API respondió con el estado ${response.status}.`);
+      throw new Error(
+        `La API respondió con el estado ${response.status}.`,
+      );
     }
 
     const data = (await response.json()) as TerminosResponse;
 
-    // Yo verifico el contrato mínimo antes de mostrar información en la interfaz.
+    // Yo verifico el contrato mínimo antes de mostrar información.
     if (
       !data.success ||
       !data.documento ||
       !Array.isArray(data.terminos)
     ) {
-      throw new Error("La respuesta de la API no tiene el formato esperado.");
+      throw new Error(
+        "La respuesta de la API no tiene el formato esperado.",
+      );
     }
 
     return data;

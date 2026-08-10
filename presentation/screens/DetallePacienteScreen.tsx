@@ -50,8 +50,7 @@ export function DetallePacienteScreen() {
     visible: params.feedback === "created",
     type: "success",
     title: "Atención registrada",
-    message:
-      "El paciente y su tratamiento fueron guardados correctamente en SQLite.",
+    message: "El paciente y su tratamiento fueron registrados correctamente.",
   });
   const { form, errors, setErrors, actualizarCampo, validarFormulario } =
     usePacienteForm(paciente);
@@ -76,7 +75,7 @@ export function DetallePacienteScreen() {
         if (!data) setError("El registro solicitado no existe.");
       } catch (e) {
         console.log("[APP ERROR] Yo no pude cargar el detalle", e);
-        setError("No se pudo consultar el registro en SQLite.");
+        setError("No se pudo consultar el registro.");
       } finally {
         setLoading(false);
       }
@@ -129,7 +128,7 @@ export function DetallePacienteScreen() {
         visible: true,
         type: "success",
         title: "Cambios guardados",
-        message: "La atención fue actualizada correctamente en SQLite.",
+        message: "La atención fue actualizada correctamente.",
       });
     } catch (e) {
       console.log("[APP ERROR] Yo no pude actualizar el paciente", e);
@@ -190,7 +189,7 @@ export function DetallePacienteScreen() {
     return (
       <SafeAreaView className="flex-1 bg-slate-50 px-5 pt-4">
         <AppHeader title="Detalle del paciente" />
-        <LoadingState message="Consultando el registro en SQLite..." />
+        <LoadingState message="Consultando el registro..." />
       </SafeAreaView>
     );
   }
@@ -237,7 +236,8 @@ export function DetallePacienteScreen() {
               Eliminar atención
             </Text>
             <Text className="mt-2 text-base leading-6 text-slate-600">
-              ¿Deseas eliminar definitivamente la atención de {paciente.pacienteNombre}?
+              ¿Deseas eliminar definitivamente la atención de{" "}
+              {paciente.pacienteNombre}?
             </Text>
             <Text className="mt-2 text-sm leading-5 text-red-600">
               Esta acción no se puede deshacer.
@@ -294,6 +294,11 @@ export function DetallePacienteScreen() {
             <Text className="mt-2 text-slate-400">
               Registrado el {formatearFecha(paciente.fechaRegistro)}
             </Text>
+            {paciente.doctorEmail ? (
+              <Text className="mt-1 text-sm font-semibold text-cyan-300">
+                Responsable: {paciente.doctorEmail}
+              </Text>
+            ) : null}
           </View>
 
           <View className="rounded-[28px] border border-slate-200 bg-white p-5">

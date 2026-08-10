@@ -1,9 +1,9 @@
-// Yo administro el formulario y consulto SQLite para autenticar al doctor.
+// Yo administro el formulario de acceso y delego la autenticación a Firebase Authentication.
+import { FirebaseError } from "firebase/app";
 import { useRouter } from "expo-router";
-import { SQLiteDatabase } from "expo-sqlite";
 import { useState } from "react";
 
-import { doctorRepository } from "@/infrastructure/repositories/doctorRepository";
+import { doctorFirebaseRepository } from "@/infrastructure/repositories/doctorFirebaseRepository";
 import {
   validarCorreo,
   validarPassword,
@@ -15,7 +15,7 @@ type LoginErrors = {
   credentials?: string;
 };
 
-export function useLoginForm(db: SQLiteDatabase, emailInicial = "") {
+export function useLoginForm(emailInicial = "") {
   const router = useRouter();
   const [email, setEmail] = useState(emailInicial);
   const [password, setPassword] = useState("");
@@ -44,9 +44,8 @@ export function useLoginForm(db: SQLiteDatabase, emailInicial = "") {
     const nuevosErrores: LoginErrors = {};
 
     if (!email.trim()) nuevosErrores.email = "El correo es obligatorio.";
-    else if (!validarCorreo(email)) {
+    else if (!validarCorreo(email))
       nuevosErrores.email = "Ingresa un correo válido.";
-    }
 
     if (!password) nuevosErrores.password = "La contraseña es obligatoria.";
     else if (!validarPassword(password)) {
@@ -63,29 +62,39 @@ export function useLoginForm(db: SQLiteDatabase, emailInicial = "") {
       setLoading(true);
       setErrors({});
 
-      // Yo autentico contra los doctores guardados localmente, incluso sin internet.
-      const doctor = await doctorRepository.autenticar(db, email, password);
+      // Yo inicio sesión con correo y contraseña mediante Firebase Authentication.
+      await doctorFirebaseRepository.autenticar(email, password);
+      router.replace("/home");
+    } catch (error) {
+      console.log("[AUTH ERROR] Yo no pude iniciar sesión", error);
 
-      if (!doctor) {
-        setErrors({
-          credentials:
-            "No encontramos un doctor con esas credenciales. Revisa los datos o crea una cuenta.",
-        });
-        return;
+      if (error instanceof FirebaseError) {
+        if (
+          error.code === "auth/invalid-credential" ||
+          error.code === "auth/user-not-found" ||
+          error.code === "auth/wrong-password"
+        ) {
+          setErrors({ credentials: "Correo o contraseña incorrectos." });
+          return;
+        }
+
+        if (error.code === "auth/network-request-failed") {
+          setErrors({
+            credentials:
+              "Revisa tu conexión a internet e inténtalo nuevamente.",
+          });
+          return;
+        }
+
+        if (error.code === "auth/too-many-requests") {
+          setErrors({
+            credentials: "Demasiados intentos. Inténtalo nuevamente más tarde.",
+          });
+          return;
+        }
       }
 
-      router.replace({
-        pathname: "/home",
-        params: {
-          nombre: `${doctor.nombres} ${doctor.apellidos}`,
-          especialidad: doctor.especialidad,
-        },
-      });
-    } catch (error) {
-      console.log("[APP ERROR] Yo no pude autenticar al doctor", error);
-      setErrors({
-        credentials: "No se pudo consultar SQLite. Inténtalo nuevamente.",
-      });
+      setErrors({ credentials: "No fue posible iniciar sesión." });
     } finally {
       setLoading(false);
     }

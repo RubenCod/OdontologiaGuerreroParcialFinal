@@ -1,7 +1,7 @@
-// Yo cargo el resumen desde SQLite cada vez que el doctor regresa a la pantalla principal.
+// Yo cargo el resumen local y muestro los datos del doctor autenticado en Firebase.
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -10,19 +10,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PacienteLocal } from "@/domain/models/PacienteLocal";
 import { pacienteRepository } from "@/infrastructure/repositories/pacienteRepository";
 import { AppBottomNav } from "@/presentation/components/AppBottomNav";
+import { useAuth } from "@/presentation/context/AuthContext";
 
 export function HomeScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
-  const { nombre, especialidad } = useLocalSearchParams<{
-    nombre?: string;
-    especialidad?: string;
-  }>();
+  const { doctor, cerrarSesion } = useAuth();
   const [pacientes, setPacientes] = useState<PacienteLocal[]>([]);
 
   const cargarResumen = useCallback(async () => {
     try {
-      // Yo reutilizo el listado de SQLite para calcular indicadores fáciles de explicar.
       const data = await pacienteRepository.listar(db);
       setPacientes(data);
     } catch (error) {
@@ -35,6 +32,15 @@ export function HomeScreen() {
       cargarResumen();
     }, [cargarResumen]),
   );
+
+  const salir = async () => {
+    try {
+      await cerrarSesion();
+      router.replace("/login");
+    } catch (error) {
+      console.log("[AUTH ERROR] Yo no pude cerrar la sesión", error);
+    }
+  };
 
   const resumen = [
     {
@@ -59,6 +65,10 @@ export function HomeScreen() {
     },
   ];
 
+  const nombreDoctor = doctor
+    ? `Dr. ${doctor.nombres} ${doctor.apellidos}`
+    : "Doctor";
+
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <ScrollView
@@ -72,41 +82,34 @@ export function HomeScreen() {
               Bienvenido,
             </Text>
             <Text className="text-2xl font-black text-slate-900">
-              {nombre ?? "Equipo clínico"}
+              {nombreDoctor}
             </Text>
             <Text className="mt-1 text-sm font-semibold text-cyan-700">
-              {especialidad ?? "Gestión odontológica"}
+              {doctor?.especialidad ?? "Odontología"}
             </Text>
           </View>
           <TouchableOpacity
             accessibilityLabel="Cerrar sesión"
             className="h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white"
-            onPress={() => router.replace("/login")}
+            onPress={() => void salir()}
           >
             <Ionicons name="log-out-outline" size={21} color="#475569" />
           </TouchableOpacity>
         </View>
 
         <View className="mt-6 overflow-hidden rounded-[32px] bg-slate-950 p-6">
-          <View className="flex-row items-start justify-between">
-            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500">
-              <Ionicons name="medical" size={29} color="#ffffff" />
-            </View>
-            <View className="rounded-full bg-emerald-400/15 px-3 py-2">
-              <Text className="text-xs font-extrabold text-emerald-300">
-                SQLite activo
-              </Text>
-            </View>
+          <View className="h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500">
+            <Ionicons name="medical" size={29} color="#ffffff" />
           </View>
           <Text className="mt-6 text-xs font-extrabold uppercase tracking-[2px] text-cyan-400">
-            EF_OdontologiaGuerrero
+            Odontología Guerrero
           </Text>
           <Text className="mt-2 text-3xl font-black leading-9 text-white">
-            Control clínico de Pacientes.
+            Gestión de pacientes y atenciones.
           </Text>
           <Text className="mt-3 leading-6 text-slate-400">
-            Los doctores, pacientes y tratamientos permanecen guardados
-            Gracias a SQLlite.
+            Consulta y administra el seguimiento odontológico desde un solo
+            lugar.
           </Text>
         </View>
 
@@ -138,26 +141,20 @@ export function HomeScreen() {
         <ActionCard
           icon="person-add-outline"
           onPress={() => router.push("/pacientes/nuevo")}
-          subtitle="Registra "
+          subtitle="Registra un paciente y su atención"
           title="Nueva atención"
         />
         <ActionCard
           icon="people-outline"
           onPress={() => router.push("/pacientes")}
-          subtitle="Consulta, edita o elimina registros guardados"
+          subtitle="Consulta, edita o elimina registros"
           title="Gestionar pacientes"
         />
         <ActionCard
-          icon="cloud-download-outline"
+          icon="document-text-outline"
           onPress={() => router.push("/terminos")}
-          subtitle="Consulta los terminos  API REST mediante un GET"
-          title="Terminos y Condiciones"
-        />
-        <ActionCard
-          icon="person-circle-outline"
-          onPress={() => router.push("/registro-doctor")}
-          subtitle="Crea otra cuenta de Usuario profesional"
-          title="Registrar"
+          subtitle="Consulta la información legal de la clínica"
+          title="Términos y condiciones"
         />
       </ScrollView>
       <AppBottomNav active="home" />

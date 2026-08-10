@@ -1,4 +1,4 @@
-// Yo concentro en este repositorio todas las consultas SQL del CRUD local.
+// Yo concentro en este repositorio todas las consultas SQL del CRUD local de pacientes.
 import { SQLiteDatabase } from "expo-sqlite";
 
 import {
@@ -6,14 +6,19 @@ import {
   PacienteLocal,
 } from "@/domain/models/PacienteLocal";
 
+const CAMPOS = `
+  id, COALESCE(dni, '') AS dni, pacienteNombre, edad, telefono,
+  tratamiento, sesiones, precio, prioridad, descripcion, estado,
+  COALESCE(doctorUid, '') AS doctorUid,
+  COALESCE(doctorEmail, '') AS doctorEmail,
+  fechaRegistro
+`;
+
 export const pacienteRepository = {
   async listar(db: SQLiteDatabase): Promise<PacienteLocal[]> {
     console.log("[SQL SELECT] Yo listo los pacientes guardados");
-
     return db.getAllAsync<PacienteLocal>(`
-      SELECT id, COALESCE(dni, '') AS dni, pacienteNombre, edad, telefono,
-             tratamiento, sesiones, precio, prioridad, descripcion, estado,
-             fechaRegistro
+      SELECT ${CAMPOS}
       FROM pacientes
       ORDER BY id DESC;
     `);
@@ -24,13 +29,8 @@ export const pacienteRepository = {
     id: number,
   ): Promise<PacienteLocal | null> {
     console.log("[SQL SELECT] Yo busco un paciente", { id });
-
     return db.getFirstAsync<PacienteLocal>(
-      `SELECT id, COALESCE(dni, '') AS dni, pacienteNombre, edad, telefono,
-              tratamiento, sesiones, precio, prioridad, descripcion, estado,
-              fechaRegistro
-       FROM pacientes
-       WHERE id = ?;`,
+      `SELECT ${CAMPOS} FROM pacientes WHERE id = ?;`,
       [id],
     );
   },
@@ -82,14 +82,22 @@ export const pacienteRepository = {
     return (resultado?.total ?? 0) > 0;
   },
 
-  async crear(db: SQLiteDatabase, dto: GuardarPacienteDto): Promise<number> {
-    console.log("[SQL INSERT] Yo registro una atención", dto);
+  async crear(
+    db: SQLiteDatabase,
+    dto: GuardarPacienteDto,
+    doctorUid: string,
+    doctorEmail: string,
+  ): Promise<number> {
+    console.log("[SQL INSERT] Yo registro una atención", {
+      dni: dto.dni,
+      doctorUid,
+    });
 
     const resultado = await db.runAsync(
       `INSERT INTO pacientes
         (dni, pacienteNombre, edad, telefono, tratamiento, sesiones, precio,
-         prioridad, descripcion, estado, fechaRegistro)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+         prioridad, descripcion, estado, doctorUid, doctorEmail, fechaRegistro)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         dto.dni,
         dto.pacienteNombre,
@@ -101,6 +109,8 @@ export const pacienteRepository = {
         dto.prioridad,
         dto.descripcion,
         dto.estado,
+        doctorUid,
+        doctorEmail,
         new Date().toISOString(),
       ],
     );
@@ -113,7 +123,7 @@ export const pacienteRepository = {
     id: number,
     dto: GuardarPacienteDto,
   ): Promise<void> {
-    console.log("[SQL UPDATE] Yo actualizo una atención", { id, dto });
+    console.log("[SQL UPDATE] Yo actualizo una atención", { id });
 
     await db.runAsync(
       `UPDATE pacientes
@@ -143,7 +153,7 @@ export const pacienteRepository = {
       id,
     ]);
 
-    // Yo verifico que SQLite haya eliminado realmente el registro.
+    // Yo confirmo que SQLite haya eliminado realmente el registro solicitado.
     if (resultado.changes === 0) {
       throw new Error("El paciente ya no existe o no pudo ser eliminado.");
     }

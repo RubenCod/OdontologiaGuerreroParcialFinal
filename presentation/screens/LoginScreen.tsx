@@ -1,7 +1,6 @@
-// Yo presento el acceso profesional y permito ingresar con doctores guardados en SQLite.
+// Yo presento el acceso de doctores autenticados mediante Firebase Authentication.
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -20,12 +19,8 @@ import { StateMessage } from "@/presentation/components/StateMessage";
 import { useLoginForm } from "@/presentation/hooks/useLoginForm";
 
 export function LoginScreen() {
-  const db = useSQLiteContext();
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    email?: string;
-    registro?: string;
-  }>();
+  const params = useLocalSearchParams<{ email?: string; registro?: string }>();
   const [showToast, setShowToast] = useState(params.registro === "success");
   const cerrarToast = useCallback(() => setShowToast(false), []);
   const {
@@ -36,14 +31,14 @@ export function LoginScreen() {
     cambiarEmail,
     cambiarPassword,
     iniciarSesion,
-  } = useLoginForm(db, params.email ?? "");
+  } = useLoginForm(params.email ?? "");
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950">
       <AppToast
-        message="La cuenta del doctor quedó guardado Correctamente. Ya puedes ingresar con tus credenciales."
+        message="Ya puedes ingresar con el correo y contraseña registrados."
         onClose={cerrarToast}
-        title="Cuenta creada correctamente"
+        title="Cuenta creada"
         type="success"
         visible={showToast}
       />
@@ -68,34 +63,22 @@ export function LoginScreen() {
               </View>
               <View className="ml-4 flex-1">
                 <Text className="text-xs font-extrabold uppercase tracking-[2px] text-cyan-400">
-                  Evaluación final odontoapp
+                  Odontología Guerrero
                 </Text>
                 <Text className="mt-1 text-xl font-black text-white">
-                  EF_OdontologiaGuerrero
+                  Odontología Guerrero App
                 </Text>
               </View>
             </View>
-
-            <Text className="mt-7 text-4xl font-black leading-[46px] text-white">
-              Gestión clínica Odontologia Guerrero
-            </Text>
-            <Text className="mt-3 text-base leading-6 text-slate-400">
-              Ingresa con una cuenta de Usuario registrado en el dispositivo.
-            </Text>
           </View>
 
           <View className="rounded-[32px] bg-white p-6">
-            <View className="mb-6 flex-row items-start justify-between">
-              <View className="flex-1">
-                <Text className="text-2xl font-black text-slate-900">
-                  Iniciar sesión
-                </Text>
-                <Text className="mt-1 leading-5 text-slate-500">
-                  Tus credenciales se validan con SQLite.
-                </Text>
-              </View>
-              
-            </View>
+            <Text className="text-2xl font-black text-slate-900">
+              Iniciar sesión
+            </Text>
+            <Text className="mb-6 mt-1 leading-5 text-slate-500">
+              Ingresa tus credenciales profesionales.
+            </Text>
 
             <AppInput
               autoCapitalize="none"
@@ -105,7 +88,7 @@ export function LoginScreen() {
               keyboardType="email-address"
               label="Correo profesional"
               onChangeText={cambiarEmail}
-              placeholder="ejemplo@correo.com"
+              placeholder="doctor@correo.com"
               value={email}
             />
             <AppInput
@@ -131,31 +114,25 @@ export function LoginScreen() {
               iconName="log-in-outline"
               loading={loading}
               onPress={iniciarSesion}
-              title="Ingresar al sistema"
+              title="Ingresar"
             />
 
             <View className="my-5 h-px bg-slate-200" />
 
             <Text className="text-center text-sm font-semibold text-slate-500">
-              ¿Todavía no tienes credenciales?
+              ¿No tienes una cuenta?
             </Text>
             <TouchableOpacity
               activeOpacity={0.8}
               className="mt-3 h-14 flex-row items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50"
               onPress={() => router.push("/registro-doctor")}
             >
-              <Ionicons
-                name="person-add-outline"
-                size={21}
-                color="#0e7490"
-              />
+              <Ionicons name="person-add-outline" size={21} color="#0e7490" />
               <Text className="ml-2 text-base font-extrabold text-cyan-800">
-                Crear cuenta de Usuario
+                Registrar doctor
               </Text>
             </TouchableOpacity>
           </View>
-
-       
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

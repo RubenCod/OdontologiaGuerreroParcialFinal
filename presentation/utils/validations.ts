@@ -1,9 +1,9 @@
-// Yo valido los datos antes de enviarlos a los repositorios SQLite.
+// Yo valido los datos antes de enviarlos a Firebase o a los repositorios SQLite.
 import {
-  CrearDoctorDto,
+  RegistrarDoctorDto,
   DoctorFormData,
   DoctorFormErrors,
-} from "@/domain/models/DoctorLocal";
+} from "@/domain/models/Doctor";
 import {
   GuardarPacienteDto,
   PacienteFormData,
@@ -56,6 +56,8 @@ export function validarDoctor(form: DoctorFormData): DoctorFormErrors {
   if (!especialidad) errores.especialidad = "La especialidad es obligatoria.";
   else if (especialidad.length < 3 || especialidad.length > 60) {
     errores.especialidad = "Ingresa entre 3 y 60 caracteres.";
+  } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/.test(especialidad)) {
+    errores.especialidad = "La especialidad solo debe contener letras.";
   }
 
   if (!form.email.trim()) errores.email = "El correo es obligatorio.";
@@ -77,8 +79,8 @@ export function validarDoctor(form: DoctorFormData): DoctorFormErrors {
   return errores;
 }
 
-export function convertirDoctorADto(form: DoctorFormData): CrearDoctorDto {
-  // Yo retiro la confirmación porque SQLite solo necesita almacenar la contraseña elegida.
+export function convertirDoctorADto(form: DoctorFormData): RegistrarDoctorDto {
+  // Yo retiro la confirmación y normalizo los datos antes de enviarlos a Firebase.
   return {
     dni: form.dni.trim(),
     nombres: form.nombres.trim().replace(/\s+/g, " "),
